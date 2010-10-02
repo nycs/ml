@@ -2,7 +2,7 @@ Why hello there reader.
 
 I prefer looking at things in a web browser so I hooked incanter charts into a web server. It's interactive so any change to the files will be reflected immediately with a page refresh.
 
-Steps (I may be missing something in towards the beginning. Adapt and document as necessary.):
+Steps (I may be missing something towards the beginning. Adapt and document as necessary.):
 1. Install lein (http://github.com/technomancy/leiningen)
 2. /ml$ lein repl
 3. Get a cup of tea while it fetches deps and builds stuff
