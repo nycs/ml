@@ -59,16 +59,16 @@
 
 (defroutes webservice
   (GET "/" [] sample-form)
+  (GET "/kmeans" [] {:status 200
+                     :headers {"Content-Type" "image/png"}
+                     :body (pnger (kmeans-test))})
   (GET "/sample-normal"
     {request :request, params :params}
       (gen-samp-hist-png request (params "size") (params "mean") (params "sd")))
-  (route/not-found "Horty not found bitch"))
+  (route/not-found "this page wasn't found"))
 
 (def service-wrapper
-  (wrap-reload #'webservice '(ml.core)))
+  (wrap-reload #'webservice ['(ml.core) '(ml.cluster)]))
 
 (defn serve []
   (run-jetty #'service-wrapper {:port 8080}))
-
-(defn viewer []
-  (view (chart-normal 10000 10 1)))
