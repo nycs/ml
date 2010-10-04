@@ -61,14 +61,14 @@
   (GET "/" [] sample-form)
   (GET "/kmeans" [] {:status 200
                      :headers {"Content-Type" "image/png"}
-                     :body (pnger (kmeans-test))})
+                     :body (pnger (kmeans-plot))})
   (GET "/sample-normal"
     {request :request, params :params}
       (gen-samp-hist-png request (params "size") (params "mean") (params "sd")))
   (route/not-found "this page wasn't found"))
 
 (def service-wrapper
-  (wrap-reload #'webservice ['(ml.core) '(ml.cluster)]))
+  (wrap-reload #'webservice '(ml.core ml.cluster)))
 
 (defn serve []
   (run-jetty #'service-wrapper {:port 8080}))
