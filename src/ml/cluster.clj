@@ -35,6 +35,15 @@
       (for [i (range (count (first points)))] 
         (map (fn [x] (nth x i)) points))))
 
+  (defn rands-unq
+    [length n used]
+    (if (= (count used) n)
+      used
+      (let [x (rand-int length)]
+        (if (some (fn [y] (= x y)) used)
+          (rands-unq length n used)
+          (rands-unq length n (concat used [x]))))))
+
   (defn expect
     [points means]
     (map (fn [x] (for [j x] (last j)))
@@ -45,21 +54,22 @@
             [(nearest-cluster point means) point])))))
 
   (defn iter
-    [k mat means]
+    [mat means]
+    (println means)
     (let [clusters (expect mat means)
           means-new (map centroid clusters)]
       (if (= means-new means)
         clusters
-        (iter k mat means-new))))
+        (iter mat means-new))))
 
-  (iter k mat (sel mat :rows (range k))))
+  (iter mat (sel mat :rows (rands-unq (count mat) k []))))
 
 (defn kmeans-sim
   []
   (kmeans 3
-    (matrix (concat (data-gen 2 3 9 0.5)
-                    (data-gen 2 3 0 0.5)
-                    (data-gen 2 3 -5 0.5)))))
+    (matrix (concat (data-gen 2 4 9 0.5)
+                    (data-gen 2 4 0 0.5)
+                    (data-gen 2 4 -5 0.5)))))
 
 (defn kmeans-plot
   []
