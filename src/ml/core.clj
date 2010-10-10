@@ -1,12 +1,13 @@
 (ns ml.core
   (:use [compojure.core]
         [compojure.response]
-        [ml.cluster]
+        [ml.cluster.kmeans :as kmeans]
+        [ml.cluster :as cluster]
         [ring.util.servlet]
         [ring.adapter.jetty]
         [ring.middleware.reload]
         [ring.middleware.stacktrace]
-        [incanter core]
+        [incanter core charts stats]
         [hiccup core form-helpers page-helpers])
   (:require [compojure.route :as route])
   (:import (java.io ByteArrayOutputStream
@@ -44,6 +45,14 @@
       (submit-button " view"))))
 
 (defn gen-samp-hist-png [request size-str mean-str sd-str]
+    (defn chart-normal
+      [size mean sd]
+      (histogram 
+        (sample-normal size :mean mean :sd sd)
+        :title "Normal Sample"
+        :x-label (str "sample-size = " size
+                      ", mean = " mean
+                      ", sd = " sd)))
     (let [size (if (nil? size-str)
                  1000
                  (Integer/parseInt size-str))
@@ -59,16 +68,18 @@
 
 (defroutes webservice
   (GET "/" [] sample-form)
-  (GET "/kmeans" [] {:status 200
-                     :headers {"Content-Type" "image/png"}
-                     :body (pnger (kmeans-plot))})
+  (GET "/cluster/kmeans" [] {:status 200
+                             :headers {"Content-Type" "image/png"}
+                             :body (pnger
+                                     (cluster/plot
+                                       (cluster/sim kmeans/alg)))})
   (GET "/sample-normal"
     {request :request, params :params}
       (gen-samp-hist-png request (params "size") (params "mean") (params "sd")))
   (route/not-found "this page wasn't found"))
 
 (def service-wrapper
-  (wrap-reload #'webservice '(ml.core ml.cluster)))
+  (wrap-reload #'webservice '(ml.core ml.cluster.kmeans)))
 
 (defn serve []
   (run-jetty #'service-wrapper {:port 8080}))
