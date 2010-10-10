@@ -10,14 +10,14 @@
     curmin
     (let [dist (euclidean-distance home (nth neighbors i))]
       (if (or (nil? curmin) (< dist (last curmin)))
-        (min-distance home neighbors (+ 1 i) [i dist])
-        (min-distance home neighbors (+ 1 i) curmin)))))
+        (closest-neighbor home neighbors (+ 1 i) [i dist])
+        (closest-neighbor home neighbors (+ 1 i) curmin)))))
 
 (defn- nearest-cluster
   "Returns the cluster (index of the mean point in
   the means seq) that is nearest to the given point."
   [point means]
-  (first (min-distance point means 0 nil)))
+  (first (closest-neighbor point means 0 nil)))
 
 (defn- expect
   "Runs the expectation step in the k-means algorithm."
