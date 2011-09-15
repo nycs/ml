@@ -21,7 +21,7 @@
 (defn run
   "Partitions a matrix of two-dimensional points into k clusters using
   the k-means algorthm. This is accomplished by iterating through the
-  k-means algorithm until a suitable solution is found, which is when
+  k-means algorithm until it converges on a solution, i.e. when
   the means of the clusters found by the current iteration are equal to
   those of the previous iteration."
   ([k mat]
