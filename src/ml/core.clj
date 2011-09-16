@@ -1,8 +1,9 @@
 (ns ml.core
   (:use [compojure.core]
         [compojure.response]
+        [compojure.handler]
         [ml.cluster.kmeans :as kmeans]
-        [ml.cluster :as cluster]
+        [ml.cluster.util :as util]
         [ring.util.servlet]
         [ring.adapter.jetty]
         [ring.middleware.reload]
@@ -23,6 +24,7 @@
     in-stream))
 
 (defn html-doc 
+  "From the example from the incanter docs."
   [title & body] 
   (html 
     (doctype :html4) 
@@ -36,7 +38,9 @@
              "Generate a normal sample"]]]
         body]]))
 
-(def sample-form
+(defn sample-form
+  "From the example from the incanter docs."
+  []
   (html-doc "sample-normal histogram"
     (form-to [:get "/sample-normal"]
       "sample size: " (text-field {:size 4} :size)
@@ -44,42 +48,41 @@
       "sd: " (text-field {:size 4} :sd)
       (submit-button " view"))))
 
-(defn gen-samp-hist-png [request size-str mean-str sd-str]
-    (defn chart-normal
-      [size mean sd]
-      (histogram 
-        (sample-normal size :mean mean :sd sd)
-        :title "Normal Sample"
-        :x-label (str "sample-size = " size
-                      ", mean = " mean
-                      ", sd = " sd)))
-    (let [size (if (nil? size-str)
-                 1000
-                 (Integer/parseInt size-str))
-          m (if (nil? mean-str)
-              0
-              (Double/parseDouble mean-str))
-          s (if (nil? sd-str)
-              1
-              (Double/parseDouble sd-str))]
-          {:status 200
-           :headers {"Content-Type" "image/png"}
-           :body (pnger (chart-normal size m s))}))
+(defn gen-samp-hist-png
+  "Slightly modified from the example from the incanter docs."
+  [request size-str mean-str sd-str]
+  (defn chart-normal
+    [size mean sd]
+    (histogram 
+      (sample-normal size :mean mean :sd sd)
+      :title "Normal Sample"
+      :x-label (str "sample-size = " size
+                    ", mean = " mean
+                    ", sd = " sd)))
+  (let [size (if size-str (Integer/parseInt size-str) 1000)
+        m (if mean-str (Double/parseDouble mean-str) 0)
+        s (if sd-str (Double/parseDouble sd-str) 1)]
+        {:status 200
+         :headers {"Content-Type" "image/png"}
+         :body (pnger (chart-normal size m s))}))
 
-(defroutes webservice
-  (GET "/" [] sample-form)
-  (GET "/cluster/kmeans" [] {:status 200
-                             :headers {"Content-Type" "image/png"}
-                             :body (pnger
-                                     (cluster/plot
-                                       (cluster/sim kmeans/alg)))})
-  (GET "/sample-normal"
-    {request :request, params :params}
-      (gen-samp-hist-png request (params "size") (params "mean") (params "sd")))
-  (route/not-found "this page wasn't found"))
+(site
+  (defroutes ml-routes
+    (GET "/" [] sample-form)
+    (GET "/cluster/kmeans" [] {:status 200
+                               :headers {"Content-Type" "image/png"}
+                               :body (pnger
+                                       (util/plot
+                                         (util/sim kmeans/run)))})
+    (GET "/sample-normal"
+      {request :request, params :params}
+        (gen-samp-hist-png request (params "size") (params "mean") (params "sd")))
+    (route/not-found "this page wasn't found")))
 
 (def service-wrapper
-  (wrap-reload #'webservice '(ml.core ml.cluster.kmeans)))
+  (wrap-reload #'ml-routes '(ml.core ml.math ml.cluster.util ml.cluster.kmeans)))
 
 (defn serve []
-  (run-jetty #'service-wrapper {:port 8080}))
+  (run-jetty service-wrapper {:port 8080}))
+
+;(cluster/sim kmeans/alg)

@@ -1,7 +1,9 @@
-(ns ml.cluster
+(ns ml.cluster.util
   (:use [incanter core stats charts]))
 
 (defn sim
+  "Run a clustering simulation. Executes the given algorithm with 3 clusters
+  and a random set of 12 points."
   [alg]
   (defn data-gen
     [cols rows mean sd]
@@ -15,6 +17,7 @@
                 (data-gen 2 4 -5 0.5))))))
 
 (defn plot
+  "Plot some clusters."
   [clusters]
   (let [groups (flatten
                  (for [i (range (count clusters))]
